@@ -1,0 +1,36 @@
+#lang racket
+
+;q1
+; Rember não existe! Preciso definí-la
+
+;(define rember
+;  (lambda (a lat)
+;  (cond
+;    ((null? lat) '())
+;    (else (cond
+;            ((eq? a (car lat)) (cdr lat)) ; Do jeito que está, essa função só retorna o valor esperado quando o primeiro elemento da lista é a.
+;            (else (rember a (cdr lat))))))))
+
+; A versão correta de rember usa cons a seu favor
+; (define rember
+;  (lambda (a lat)
+;  (cond
+;    ((null? lat) '())
+;    (else (cond
+;            ((eq? a (car lat)) (cdr lat))
+;            (else (cons (car lat) (rember a (cdr lat)))))))))
+
+
+
+; Reescrevendo
+(define rember
+  (lambda (a lat)
+    (cond
+      ((null? lat) '())
+      (else(cond
+             ((eq? a (car lat)) (cdr lat))
+             (else (cons (car lat) (rember a (cdr lat)))))))))
+
+(define lat '(bacon lettuce and tomato)) ; Aqui o resultado será '(tomato)
+(define a 'and)
+(rember a lat)

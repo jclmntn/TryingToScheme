@@ -1,0 +1,8 @@
+#lang racket
+(define ^
+  (lambda (a1 a2)
+    (cond
+      ((zero? a2) 1)
+      (else (* a1 (^ a1 (sub1 a2)))))))
+
+(^ 2 1)

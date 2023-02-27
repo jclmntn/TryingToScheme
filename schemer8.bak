@@ -1,0 +1,220 @@
+#lang racket
+; Definindo funções necessárias
+(define atom?
+  (lambda (x)
+    (and (not (pair? x)) (not (null? x)))))
+
+(define eqan?
+  (lambda (a1 a2)
+    (cond
+     ((and (number? a1) (number? a2)) (= a1 a2))
+     ((or (number? a1) (number? a2)) #f)
+     (else (eq? a1 a2)))))
+
+
+(define equal?
+  (lambda (arg1 arg2)
+    (cond
+      ((and (atom? arg1) (atom? arg1)) (eqan? arg1 arg2))
+      ((or (atom? arg1) (atom? arg1)) #f)
+      (else (eqlist? arg1 arg2)))))
+
+(define eqlist?
+  (lambda (l1 l2)
+    (cond
+      ((and (null? l1) (null? l2)) #t)
+      ((or (null? l1) (null? l2)) #f)
+      (else
+       (and (equal? (car l1) (car l2)) (eqlist? (cdr l1) (cdr l2)))))))
+
+(define ^
+  (lambda (a b)
+    (cond
+      ((zero? b) 1)
+      (else (* a (^ a (sub1 b)))))))
+
+(^ 2 6)
+
+; Definindo a função rember-f
+
+;(define rember-f
+;  (lambda (test? a l)
+;    (cond
+;      ((null? l) '())
+;      ((test? a (car l)) (cdr l))
+;      (else (cons (car l) (rember-f test? a (cdr l)))))))
+;
+;(rember-f = '5 '(6 2 5 3))
+;(rember-f eq? '5 '(6 2 5 3))
+;(rember-f equal? '5 '(6 2 5 3))
+
+
+; Definindo a função eq-c
+(define eq?-c
+  (lambda (a)
+    (lambda (x)
+      (eq? x a))))
+
+
+; Definindo a função eq?-salad
+(define eq?-salad
+    (eq?-c 'salad))
+
+(eq?-salad 'salad)
+(eq?-salad 'tuna)
+
+; Reescrevendo rember-f usando currying
+(define rember-f
+  (lambda (test?)
+    (lambda (a l)
+      (cond
+        ((null? l) '())
+      ((test? a (car l)) (cdr l))
+      (else (cons (car l) ((rember-f test?) a (cdr l)))))))) ; Perceba que é necessário chamar a função sendo definida no escopo local usando um argumento do escopo anterior (?)
+
+((rember-f eq?) '5 '(6 2 5 3))
+
+(define rember-eq?
+  (rember-f eq?))
+
+(rember-eq? 'tuna '(tuna salad is good))
+((rember-f eq?) 'eq? '(equal? eq? eqan? eqlist? eqpair?))
+
+; Definindo a função insertL
+(define insertL-f
+  (lambda (test?)
+   (lambda (new old l)
+     (cond
+       ((null? l) '())
+       ((test? (car l) old) (cons new l))
+       (else (cons (car l) ((insertL-f test?) new old (cdr l))))))))
+
+((insertL-f equal?) 'flamengo 'corinthians '(corinthians é o maior da terra))
+
+; Definindo a função insertR
+
+(define insertR-f
+  (lambda (test?)
+   (lambda (new old l)
+     (cond
+       ((null? l) '())
+       ((test? (car l) old) (cons old (cons new (cdr l))))
+       (else (cons (car l) ((insertR-f test?) new old (cdr l))))))))
+((insertR-f equal?) 'flamengo 'corinthians '(corinthians é o maior da terra))
+
+; Definindo a função insert-g
+; Faria isso usando funções auxiliares
+; É exatamente o que o autor faz, embora o nome das funções seja diferente. 
+(define right
+  (lambda (new old l)
+    (cons old (cons new l))))
+
+(define left
+  (lambda (new old l)
+    (cons new (cons old l))))
+;
+;(define insert-g
+;  (lambda (test?)
+;    (lambda (type)
+;      (lambda (new old l)
+;        (cond
+;        ((null? l) '())
+;        ((test? (car l) old) (type new old l))
+;        (else (cons (car l) (((insert-g test?) type) new old (cdr l)))))))))
+;(((insert-g equal?) right) 'flamengo 'corinthians '(corinthians é o maior da terra))
+;(((insert-g equal?) left) 'flamengo 'corinthians '(corinthians é o maior da terra))
+
+
+; Vou substituir insert-g por uma versão mais simples.
+
+(define insert-g
+  (lambda (seq)
+    (lambda (new old l)
+      (cond
+        ((null? l) '())
+        ((eq? (car l) old) (seq new old (cdr l)))
+        (else (cons (car l) ((insert-g seq) new old (cdr l))))))))
+
+((insert-g  right) 'flamengo 'corinthians '(corinthians é o maior da terra))
+((insert-g  left) 'flamengo 'corinthians '(corinthians é o maior da terra))
+
+
+
+; Agora vou definir uma função de substituição
+((insert-g (lambda (new old l) (cons new (cdr l)))) 'flamengo 'corinthians '(corinthians é o maior da terra))
+
+; Ou ainda, criando uma função auxilar
+(define seqS
+  (lambda (new old l) (cons new (cdr l))))
+
+(define subst (insert-g seqS))
+(subst 'flamengo 'corinthians '(corinthians é o maior da terra))
+
+; teste yyy
+(define seqrem
+  (lambda (new old l)
+    l))
+
+(define yyy
+  (lambda (a l)
+    ((insert-g seqrem) #f a l)))
+
+(yyy 'sausage '(pizza with sausage and bacon)) ; Trata-se de um rember porque só retorna o resultado de cdr l no escopo anterior... não há cons com new e old!
+
+
+; tentando defininr a função atom-to-function
+(define 1st-sub-exp
+  (lambda (nexp)
+    (car (cdr nexp))))
+(define 2nd-sub-exp
+  (lambda (nexp)
+    (car (cdr (cdr nexp)))))
+
+(define operator
+  (lambda (nexp)
+    (car nexp)))
+
+(define atom-to-function
+  (lambda (x)
+      (cond
+        ((eq? x '+) +)
+        ((eq? x '*) *)
+        (else ^))))
+
+(atom-to-function (operator '(+ 5 3)))
+
+; Simplificando value!
+
+(define value
+  (lambda (nexp)
+    (cond
+      ((atom? nexp) nexp)
+      (else ((atom-to-function (operator nexp)) (value (1st-sub-exp nexp)) (value (2nd-sub-exp nexp)))))))
+
+(value '(^ 5 3))
+
+; Escrevendo multirember-f
+(define multirember-f
+  (lambda (test?)
+    (lambda (a lat)
+      (cond
+        ((null? lat) '())
+        ((test? (car lat) a) ((multirember-f test?) a (cdr lat)))
+        (else (cons (car lat) ((multirember-f test?) a (cdr lat))))))))
+
+((multirember-f eq?) 'flamengo '(flamengo fluminense flamengo flamengo corinthians))
+((multirember-f eq?) 'tuna '(shrimp salad tuna salad and tuna))
+
+
+; Definindo a função que testa se um valor é igual a tuna
+;(define test?-eq
+;  (lambda (value)
+;    (eq? 'tuna value)))
+;
+;(test?-eq 'tuna)
+
+(define eq?-tuna
+  (eq?-c k))
+
+(define eq?-tuna
+  (eq?-c 'tuna))

@@ -1,0 +1,14 @@
+#lang racket
+
+
+;Minha tentativa de rember*
+; Lembrando que rember tira o primeiro a observado em lat
+(define rember*
+  (lambda (a lat)
+    (cond
+      ((null? lat) '())
+      (else (cond
+              ((eq? a (car lat)) (cdr lat))
+              (else (cons (car lat) (rember* a (cdr lat)))))))))
+
+(rember* 'cup '(cup of cup of cup of tea))
